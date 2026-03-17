@@ -9,177 +9,162 @@
 
 <style>
 :root {
-  --sage: #8da089;
-  --charcoal: #2c2c2c;
-  --cream: #fcfbf9;
+  --sage:#8da089;
+  --charcoal:#2c2c2c;
+  --cream:#fcfbf9;
 }
 
-body {
+body,html{
   margin:0;
+  height:100%;
   font-family:'Prata', serif;
-  background: var(--cream);
-  color: var(--charcoal);
+  background:var(--cream);
   overflow:hidden;
 }
 
-/* --- INTRO --- */
-#intro {
+/* --- INVITE --- */
+#stage{
   position:fixed;
   inset:0;
   display:flex;
   justify-content:center;
   align-items:center;
+  perspective:2000px;
   background:var(--cream);
-  z-index:9999;
+  z-index:2000;
   transition:opacity 1s ease;
 }
 
-.card {
-  text-align:center;
+.card{
+  width:420px;
+  height:620px;
+  transform-style:preserve-3d;
+  transition:1.6s;
   cursor:pointer;
-  animation: fadeUp 1.5s ease;
+  position:relative;
 }
 
-.names {
-  font-size:34px;
-  letter-spacing:3px;
+.face{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:white;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  backface-visibility:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.08);
 }
 
-.date {
-  margin-top:20px;
-  letter-spacing:4px;
-  font-size:14px;
-  opacity:0.7;
-}
+.back{ transform:rotateY(180deg); }
 
-@keyframes fadeUp {
-  from {opacity:0; transform:translateY(20px);}
-  to {opacity:1; transform:translateY(0);}
+.wing{
+  position:absolute;
+  width:50%;
+  height:100%;
+  top:0;
+  background:rgba(255,255,255,0.5);
+  backdrop-filter:blur(2px);
+  transition:1.4s;
 }
+.left{left:0; transform-origin:left;}
+.right{right:0; transform-origin:right;}
+
+.flip{ transform:rotateY(180deg); }
+.open .left{transform:rotateY(-140deg);}
+.open .right{transform:rotateY(140deg);}
+.zoom{ transform:scale(3.5); opacity:0; }
+
+.names{ font-size:30px; letter-spacing:3px; }
+.amp{ margin:10px 0; color:var(--sage); }
 
 /* --- MAIN --- */
-#app {
+#app{
   display:none;
   opacity:0;
-  transition:opacity 1s ease;
+  transition:1s;
   max-width:1200px;
   margin:auto;
-  padding:60px 20px;
+  padding:80px 20px;
 }
 
-/* --- HEADER --- */
-h2 {
+h2{
   text-align:center;
   letter-spacing:5px;
   color:var(--sage);
-  margin-bottom:50px;
 }
 
-/* --- UPLOAD --- */
-.upload {
-  text-align:center;
-  margin-bottom:70px;
-}
+/* upload */
+.upload{text-align:center;margin-bottom:50px;}
+.upload label{border:1px solid var(--charcoal);padding:12px 30px;cursor:pointer;}
+#uploadBtn{margin-top:20px;padding:10px 30px;background:var(--sage);color:white;border:none;border-radius:30px;}
 
-.upload label {
-  border:1px solid var(--charcoal);
-  padding:14px 40px;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-.upload label:hover {
-  background:var(--charcoal);
-  color:white;
-}
-
-#uploadBtn {
-  margin-top:20px;
-  padding:12px 40px;
-  border:none;
-  border-radius:40px;
-  background:var(--sage);
-  color:white;
+/* download all */
+#downloadAll{
+  display:block;
+  margin:20px auto 50px;
+  padding:10px 25px;
+  border:1px solid var(--sage);
+  background:none;
+  color:var(--sage);
   cursor:pointer;
 }
 
-/* --- GALLERY --- */
-.grid {
+/* gallery */
+.grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
   gap:25px;
 }
 
-.item {
+.item{
   background:white;
   padding:10px;
   box-shadow:0 8px 25px rgba(0,0,0,0.05);
-  cursor:pointer;
-  transform:translateY(10px);
   opacity:0;
-  transition:all 0.6s ease;
+  transform:translateY(20px);
+  transition:.6s;
 }
 
-.item.visible {
-  transform:translateY(0);
-  opacity:1;
-}
+.item.visible{opacity:1;transform:translateY(0);}
 
-.item img {
+.item img{
   width:100%;
   height:320px;
   object-fit:cover;
-  transition:transform 0.4s ease, opacity 0.5s ease;
   opacity:0;
+  transition:.5s;
 }
+.item img.loaded{opacity:1;}
 
-.item img.loaded {
-  opacity:1;
-}
-
-.item:hover img {
-  transform:scale(1.04);
-}
-
-/* --- LIGHTBOX --- */
-#lightbox {
+/* lightbox */
+#lightbox{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.92);
   display:none;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
-  animation:fadeIn 0.3s ease;
 }
 
-#lightbox img {
+#lightbox img{
   max-width:90%;
   max-height:85%;
-  border-radius:12px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.5);
 }
 
-@keyframes fadeIn {
-  from {opacity:0;}
-  to {opacity:1;}
-}
-
-/* arrows */
-.arrow {
+.arrow{
   position:absolute;
   top:50%;
   font-size:40px;
   color:white;
   cursor:pointer;
-  user-select:none;
 }
 
-.left { left:20px; }
-.right { right:20px; }
+.leftA{left:20px;}
+.rightA{right:20px;}
 
-/* download */
-#download {
+#download{
   position:absolute;
   top:20px;
   background:var(--sage);
@@ -188,25 +173,26 @@ h2 {
   border-radius:30px;
   cursor:pointer;
 }
-
-/* subtle scroll hint */
-.scroll-hint {
-  text-align:center;
-  margin-top:20px;
-  opacity:0.6;
-  font-size:12px;
-  letter-spacing:2px;
-}
 </style>
 </head>
 
 <body>
 
-<div id="intro">
-  <div class="card" onclick="enterSite()">
-    <div class="names">Victoria & Giorgio</div>
-    <div class="date">03 · 28 · 2026</div>
-    <div class="scroll-hint">Tap to enter</div>
+<div id="stage">
+  <div class="card" id="card" onclick="openInvite()">
+    <div class="face">
+      <div class="wing left"></div>
+      <div class="wing right"></div>
+      <div class="names">Victoria</div>
+      <div class="amp">&</div>
+      <div class="names">Giorgio</div>
+      <div style="margin-top:20px;">03 · 28 · 2026</div>
+    </div>
+    <div class="face back">
+      <div class="wing left"></div>
+      <div class="wing right"></div>
+      <div>Tap to enter</div>
+    </div>
   </div>
 </div>
 
@@ -215,47 +201,65 @@ h2 {
 
   <div class="upload">
     <label for="file">Select Photos</label>
-    <input id="file" type="file" multiple hidden>
+    <input id="file" type="file" hidden multiple>
     <br>
     <button id="uploadBtn">Upload</button>
     <div id="status"></div>
   </div>
 
   <h2>The Collection</h2>
+  <button id="downloadAll" onclick="downloadAll()">Download All</button>
+
   <div id="gallery" class="grid"></div>
 </div>
 
 <div id="lightbox">
   <div id="download" onclick="download()">Download</div>
   <img id="lightImg">
-  <div class="arrow left" onclick="prev()">❮</div>
-  <div class="arrow right" onclick="next()">❯</div>
+  <div class="arrow leftA" onclick="prev()">❮</div>
+  <div class="arrow rightA" onclick="next()">❯</div>
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt-UGrZwkoTJwlbUOYGnDAEUbycu16TYH_usG_a1npV_9xRF6AZJTPGf5kVLwj2jIfNg/exec";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyt-UGrZwkoTJwlbUOYGnDAEUbycu16TYH_usG_a1npV_9xRF6AZJTPGf5kVLwj2jIfNg/exec";
 
-let images = [];
-let index = 0;
+let images=[], index=0;
+let startX=0;
 
-/* ENTER */
-function enterSite(){
-  document.getElementById('intro').style.opacity=0;
+/* INVITE */
+function openInvite(){
+  const c=document.getElementById('card');
+  const stage=document.getElementById('stage');
+
+  c.classList.add('flip');
   setTimeout(()=>{
-    document.getElementById('intro').style.display='none';
-    const app=document.getElementById('app');
-    app.style.display='block';
-    setTimeout(()=>app.style.opacity=1,100);
-    loadGallery();
-    document.body.style.overflow="auto";
-  },800);
+    c.classList.add('open');
+    setTimeout(()=>{
+      c.classList.add('zoom');
+      setTimeout(()=>{
+        stage.style.opacity=0;
+        setTimeout(()=>{
+          stage.style.display='none';
+          showApp();
+        },800);
+      },800);
+    },1200);
+  },600);
+}
+
+function showApp(){
+  const app=document.getElementById('app');
+  app.style.display='block';
+  setTimeout(()=>app.style.opacity=1,100);
+  document.body.style.overflow="auto";
+  loadGallery();
 }
 
 /* LOAD */
 async function loadGallery(){
-  const res = await fetch(SCRIPT_URL);
-  const data = await res.json();
-  images = data.images.reverse();
+  const res=await fetch(SCRIPT_URL);
+  const data=await res.json();
+  images=(data.images||[]).reverse();
   render();
 }
 
@@ -269,66 +273,85 @@ function render(){
     div.className='item';
 
     const el=document.createElement('img');
+    el.src=`https://drive.google.com/thumbnail?id=${img.id}&sz=w400`;
 
-    // progressive loading
-    el.src = `https://drive.google.com/thumbnail?id=${img.id}&sz=w400`;
+    const hi=new Image();
+    hi.src=`https://drive.google.com/thumbnail?id=${img.id}&sz=w1200`;
+    hi.onload=()=>el.src=hi.src;
 
-    const high = new Image();
-    high.src = `https://drive.google.com/thumbnail?id=${img.id}&sz=w1200`;
-    high.onload = ()=> el.src = high.src;
-
-    el.onload=()=> el.classList.add('loaded');
+    el.onload=()=>el.classList.add('loaded');
 
     div.appendChild(el);
-
     div.onclick=()=>openLightbox(i);
 
     g.appendChild(div);
-
-    setTimeout(()=>div.classList.add('visible'), i*40);
+    setTimeout(()=>div.classList.add('visible'),i*40);
   });
 }
 
 /* LIGHTBOX */
 function openLightbox(i){
   index=i;
-  document.getElementById('lightbox').style.display='flex';
+  const lb=document.getElementById('lightbox');
+  lb.style.display='flex';
   update();
+
+  lb.addEventListener('touchstart',e=>startX=e.touches[0].clientX);
+  lb.addEventListener('touchend',e=>{
+    let endX=e.changedTouches[0].clientX;
+    if(startX-endX>50) next();
+    if(endX-startX>50) prev();
+  });
 }
 
 function update(){
-  document.getElementById('lightImg').src =
+  document.getElementById('lightImg').src=
     `https://drive.google.com/thumbnail?id=${images[index].id}&sz=w1200`;
 }
 
-function next(){
-  if(index<images.length-1){index++; update();}
-}
+function next(){ if(index<images.length-1){index++; update();}}
+function prev(){ if(index>0){index--; update();}}
 
-function prev(){
-  if(index>0){index--; update();}
-}
-
+/* DOWNLOAD */
 function download(){
   const a=document.createElement('a');
   a.href=`https://drive.google.com/uc?export=download&id=${images[index].id}`;
   a.click();
 }
 
+function downloadAll(){
+  if(!images.length) return;
+  alert("Downloading all memories ✨");
+
+  images.forEach((img,i)=>{
+    setTimeout(()=>{
+      const a=document.createElement('a');
+      a.href=`https://drive.google.com/uc?export=download&id=${img.id}`;
+      a.click();
+    }, i*400);
+  });
+}
+
 /* CLOSE */
 document.getElementById('lightbox').onclick=e=>{
-  if(e.target.id==="lightbox"){
-    e.currentTarget.style.display='none';
-  }
+  if(e.target.id==="lightbox") e.currentTarget.style.display='none';
 };
 
-/* UPLOAD (simplified luxury messaging) */
+/* KEYBOARD */
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('lightbox').style.display==="flex"){
+    if(e.key==="ArrowRight") next();
+    if(e.key==="ArrowLeft") prev();
+    if(e.key==="Escape") document.getElementById('lightbox').style.display='none';
+  }
+});
+
+/* UPLOAD */
 document.getElementById('uploadBtn').onclick=async()=>{
   const files=document.getElementById('file').files;
   if(!files.length) return;
 
-  const status=document.getElementById('status');
-  status.innerText="Saving your memories ❤️";
+  document.getElementById('status').innerText="Saving your memories ❤️";
 
   for(let file of files){
     const reader=new FileReader();
@@ -339,11 +362,15 @@ document.getElementById('uploadBtn').onclick=async()=>{
 
     await fetch(SCRIPT_URL,{
       method:"POST",
-      body:JSON.stringify({file:base64, fileName:file.name})
+      body:JSON.stringify({
+        file:base64,
+        fileName:file.name,
+        mimeType:file.type
+      })
     });
   }
 
-  status.innerText="Uploaded ✨";
+  document.getElementById('status').innerText="Uploaded ✨";
   loadGallery();
 };
 </script>
