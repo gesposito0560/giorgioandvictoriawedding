@@ -1,379 +1,1013 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Victoria & Giorgio</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Victoria & Giorgio's Wedding Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href='https://fonts.googleapis.com/css?family=Prata' rel='stylesheet'>
 
-<link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sage: #8da089;
+      --charcoal: #2c2c2c;
+      --paper: #ffffff;
+      --cream: #fcfbf9;
+      --border: #e0ddd5;
+    }
 
-<style>
-:root {
-  --sage:#8da089;
-  --charcoal:#2c2c2c;
-  --cream:#fcfbf9;
-}
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      background-color: var(--cream);
+      font-family: 'Prata', serif;
+      color: var(--charcoal);
+      overflow: hidden;
+    }
 
-body,html{
-  margin:0;
-  height:100%;
-  font-family:'Prata', serif;
-  background:var(--cream);
-  overflow:hidden;
-}
+    /* --- 3D INVITATION STAGE --- */
+    #invitation-stage {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 2000;
+      perspective: 1800px;
+      background: var(--cream);
+      transition: opacity 1s ease;
+    }
 
-/* --- INVITE --- */
-#stage{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  perspective:2000px;
-  background:var(--cream);
-  z-index:2000;
-  transition:opacity 1s ease;
-}
+    .card-wrapper {
+      position: relative;
+      width: 480px; 
+      height: 680px;
+      transform-style: preserve-3d;
+      transition: transform 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+      cursor: pointer;
+    }
 
-.card{
-  width:420px;
-  height:620px;
-  transform-style:preserve-3d;
-  transition:1.6s;
-  cursor:pointer;
-  position:relative;
-}
+    .card-face {
+      position: absolute;
+      width: 100%; height: 100%;
+      backface-visibility: hidden;
+      background: var(--paper);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.05);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 50px; box-sizing: border-box;
+      transform-style: preserve-3d;
+    }
 
-.face{
-  position:absolute;
-  width:100%;
-  height:100%;
-  background:white;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  backface-visibility:hidden;
-  box-shadow:0 20px 60px rgba(0,0,0,0.08);
-}
+    .card-front { z-index: 2; }
+    .card-back { transform: rotateY(180deg); z-index: 1; }
 
-.back{ transform:rotateY(180deg); }
+    .vellum-wing {
+      position: absolute;
+      top: 0; width: 50.2%; height: 100%;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(1px);
+      -webkit-backdrop-filter: blur(1px);
+      transition: transform 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10;
+      border: 0.5px solid rgba(0,0,0,0.02);
+    }
+    .card-front .vellum-wing { background: rgba(255, 255, 255, 0.35); }
 
-.wing{
-  position:absolute;
-  width:50%;
-  height:100%;
-  top:0;
-  background:rgba(255,255,255,0.5);
-  backdrop-filter:blur(2px);
-  transition:1.4s;
-}
-.left{left:0; transform-origin:left;}
-.right{right:0; transform-origin:right;}
+    .wing-left { left: 0; transform-origin: left center; }
+    .wing-right { right: 0; transform-origin: right center; }
 
-.flip{ transform:rotateY(180deg); }
-.open .left{transform:rotateY(-140deg);}
-.open .right{transform:rotateY(140deg);}
-.zoom{ transform:scale(3.5); opacity:0; }
+    .inner-frame {
+      position: absolute;
+      top: 20px; left: 20px; right: 20px; bottom: 20px;
+      border: 1px solid var(--charcoal);
+      pointer-events: none;
+    }
+    .names { font-size: 32px; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+    .ampersand { font-size: 28px; color: var(--sage); margin: 15px 0; }
 
-.names{ font-size:30px; letter-spacing:3px; }
-.amp{ margin:10px 0; color:var(--sage); }
+    .state-flip { transform: rotateY(180deg); }
+    .state-open .vellum-wing.wing-left { transform: rotateY(-140deg); }
+    .state-open .vellum-wing.wing-right { transform: rotateY(140deg); }
+    .state-zoom { transform: rotateY(0deg) scale(3.5); opacity: 0; pointer-events: none; }
 
-/* --- MAIN --- */
-#app{
-  display:none;
-  opacity:0;
-  transition:1s;
-  max-width:1200px;
-  margin:auto;
-  padding:80px 20px;
-}
+    /* --- LOADING PERCENTAGE (ON CARD BACK) --- */
+    .loading-memories {
+      position: absolute;
+      bottom: 40px;
+      width: 100%;
+      text-align: center;
+      color: var(--sage);
+      font-size: 11px;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 0.3s;
+    }
 
-h2{
-  text-align:center;
-  letter-spacing:5px;
-  color:var(--sage);
-}
+    .percentage-number {
+      font-size: 14px;
+      font-weight: normal;
+      color: var(--charcoal);
+      letter-spacing: 1px;
+      margin-top: 5px;
+    }
 
-/* upload */
-.upload{text-align:center;margin-bottom:50px;}
-.upload label{border:1px solid var(--charcoal);padding:12px 30px;cursor:pointer;}
-#uploadBtn{margin-top:20px;padding:10px 30px;background:var(--sage);color:white;border:none;border-radius:30px;}
+    /* --- UPLOAD PROGRESS BAR --- */
+    .upload-progress {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(252, 251, 249, 0.95);
+      z-index: 4000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
 
-/* download all */
-#downloadAll{
-  display:block;
-  margin:20px auto 50px;
-  padding:10px 25px;
-  border:1px solid var(--sage);
-  background:none;
-  color:var(--sage);
-  cursor:pointer;
-}
+    .upload-progress-content {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 80%;
+    }
 
-/* gallery */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:25px;
-}
+    .upload-percentage {
+      font-size: 42px;
+      color: var(--charcoal);
+      margin: 20px 0;
+      font-weight: normal;
+    }
 
-.item{
-  background:white;
-  padding:10px;
-  box-shadow:0 8px 25px rgba(0,0,0,0.05);
-  opacity:0;
-  transform:translateY(20px);
-  transition:.6s;
-}
+    .upload-status {
+      color: var(--sage);
+      letter-spacing: 2px;
+      font-size: 0.9rem;
+      margin-top: 20px;
+    }
 
-.item.visible{opacity:1;transform:translateY(0);}
+    /* --- GALLERY CONTENT --- */
+    #main-site {
+      opacity: 0; display: none;
+      padding: 80px 20px; max-width: 1200px; margin: 0 auto;
+    }
+    .is-visible { opacity: 1 !important; display: block !important; overflow: auto; }
 
-.item img{
-  width:100%;
-  height:320px;
-  object-fit:cover;
-  opacity:0;
-  transition:.5s;
-}
-.item img.loaded{opacity:1;}
+    h2 { font-weight: 400; letter-spacing: 4px; text-transform: uppercase; color: var(--sage); text-align: center; margin-bottom: 40px; }
 
-/* lightbox */
-#lightbox{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.92);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
+    .upload-container {
+      margin-bottom: 80px; padding: 40px; border-bottom: 1px solid var(--border); text-align: center;
+    }
 
-#lightbox img{
-  max-width:90%;
-  max-height:85%;
-}
+    .custom-file-upload {
+      display: inline-block; padding: 15px 40px; cursor: pointer; border: 1px solid var(--charcoal); text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; transition: all 0.3s;
+    }
+    .custom-file-upload:hover { background: var(--charcoal); color: white; }
 
-.arrow{
-  position:absolute;
-  top:50%;
-  font-size:40px;
-  color:white;
-  cursor:pointer;
-}
+    #uploadBtn {
+      display: block; margin: 20px auto; background: var(--sage); color: white; border: none; padding: 12px 50px; border-radius: 40px; cursor: pointer; font-family: 'Prata'; font-size: 1rem;
+    }
 
-.leftA{left:20px;}
-.rightA{right:20px;}
+    .gallery-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;
+    }
 
-#download{
-  position:absolute;
-  top:20px;
-  background:var(--sage);
-  color:white;
-  padding:10px 20px;
-  border-radius:30px;
-  cursor:pointer;
-}
-</style>
+    .gallery-item {
+      background: white; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.3s;
+      position: relative;
+      touch-action: pan-y pinch-zoom;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .gallery-item:hover { transform: translateY(-5px); }
+
+    .gallery-item * {
+      pointer-events: none;
+    }
+
+    .gallery-item .video-indicator {
+      pointer-events: none;
+    }
+
+    .gallery-grid img, .gallery-grid video {
+      width: 100%; height: 350px; object-fit: cover; display: block;
+      background: #f5f5f5;
+    }
+
+    .video-indicator {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      z-index: 10;
+    }
+
+    /* --- LIGHTBOX & DOWNLOAD --- */
+    #lightbox {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+      background: rgba(0, 0, 0, 0.95);
+      justify-content:center; align-items:center; z-index:3000;
+      flex-direction: column;
+      touch-action: pan-y;
+    }
+
+    #lightbox-content { 
+      position: relative;
+      max-width: 95vw;
+      max-height: calc(95vh - 80px);
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    #lightbox-content img,
+    #lightbox-content video,
+    #lightbox-content iframe {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-size: 40px; color: white; cursor: pointer; padding: 20px; z-index: 3100;
+      background: rgba(0,0,0,0.3); border-radius: 50%; width: 60px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .arrow-left { left: 20px; }
+    .arrow-right { right: 20px; }
+
+    .lb-nav { 
+      position: absolute; bottom: 30px; width: 100%; 
+      text-align: center; letter-spacing: 2px; color: white; 
+      font-size: 0.9rem; 
+      pointer-events: none;
+    }
+
+    #downloadBtn {
+      position: absolute; top: 20px; left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 28px;
+      border-radius: 50px;
+      background: var(--sage);
+      color: white;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 3200;
+      font-family: 'Prata', serif;
+    }
+
+    .mobile-nav-dots {
+      display: none;
+      position: absolute;
+      bottom: 80px;
+      width: 100%;
+      text-align: center;
+      z-index: 3100;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin: 0 5px;
+      background-color: white;
+      border-radius: 50%;
+      opacity: 0.5;
+      transition: opacity 0.3s;
+    }
+
+    .dot.active {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+
+    .collection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .download-all-collection {
+      padding: 12px 25px;
+      border: 1px solid var(--sage);
+      color: var(--sage);
+      background: transparent;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-family: 'Prata';
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+      white-space: nowrap;
+      pointer-events: auto;
+    }
+    .download-all-collection:hover {
+      background: var(--sage);
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .card-wrapper { width: 85vw; height: 119vw; }
+      .names { font-size: 1.5rem; }
+      .arrow { 
+        display: none; 
+        background: rgba(0,0,0,0.3); 
+        width: 50px; height: 50px; 
+        font-size: 30px;
+      }
+      .mobile-nav-dots { display: block; }
+      #lightbox-content { max-width: 95%; max-height: 85%; }
+      #downloadBtn { 
+        top: 10px; 
+        left: 50%; 
+        transform: translateX(-50%);
+        padding: 8px 15px; 
+        font-size: 0.9rem; 
+      }
+      .collection-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      .download-all-collection {
+        padding: 10px 20px;
+        font-size: 0.7rem;
+      }
+      .loading-memories {
+        bottom: 60px;
+        font-size: 10px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div id="stage">
-  <div class="card" id="card" onclick="openInvite()">
-    <div class="face">
-      <div class="wing left"></div>
-      <div class="wing right"></div>
-      <div class="names">Victoria</div>
-      <div class="amp">&</div>
-      <div class="names">Giorgio</div>
-      <div style="margin-top:20px;">03 · 28 · 2026</div>
-    </div>
-    <div class="face back">
-      <div class="wing left"></div>
-      <div class="wing right"></div>
-      <div>You're looking good!</div>
+  <div id="invitation-stage">
+    <div class="card-wrapper" id="card" onclick="runOpeningSequence()">
+      <div class="card-face card-front">
+        <div class="vellum-wing wing-left"></div>
+        <div class="vellum-wing wing-right"></div>
+        <div class="inner-frame"></div>
+        <p style="font-size: 9px; letter-spacing: 3px; opacity: 0.6;">REQUEST THE HONOR OF YOUR COMPANY</p>
+        <div class="names">Victoria Purdy</div>
+        <div class="ampersand">&</div>
+        <div class="names">Giorgio Esposito</div>
+        <p style="font-size: 13px; margin-top: 30px; letter-spacing: 2px;">03 . 28 . 2026</p>
+      </div>
+      <div class="card-face card-back">
+        <div class="vellum-wing wing-left"></div>
+        <div class="vellum-wing wing-right"></div>
+        
+        <!-- LOADING MEMORIES ON CARD BACK -->
+        <div class="loading-memories" id="loadingMemories">
+          <div>LOADING MEMORIES</div>
+          <div class="percentage-number" id="percentageNumber">0%</div>
+        </div>
+        
+        <p style="font-size: 11px; letter-spacing: 4px; color: var(--sage); margin-bottom: 60px;">TAP TO UNVEIL</p>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="app">
-  <h2>Share Your Memories</h2>
-
-  <div class="upload">
-    <label for="file">Select Photos</label>
-    <input id="file" type="file" hidden multiple>
-    <br>
-    <button id="uploadBtn">Upload</button>
-    <div id="status"></div>
+  <!-- Upload Progress Modal -->
+  <div class="upload-progress" id="uploadProgress">
+    <div class="upload-progress-content">
+      <h2>Uploading Memories</h2>
+      <div class="upload-percentage" id="uploadPercentage">0%</div>
+      <div class="upload-status" id="uploadStatus">Starting upload...</div>
+    </div>
   </div>
 
-  <h2>The Collection</h2>
-  <button id="downloadAll" onclick="downloadAll()">Download All</button>
+  <div id="main-site">
+    <div class="upload-container">
+      <h2>Share Your Memories</h2>
+      <label for="fileInput" class="custom-file-upload">Select Photos / Videos</label>
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none;">
+      <div id="file-count" style="font-size: 0.8rem; margin: 15px 0; color: var(--sage);"></div>
+      <button id="uploadBtn">Upload to Gallery</button>
+      <div id="status" style="font-size: 0.8rem; margin-top: 15px;"></div>
+    </div>
 
-  <div id="gallery" class="grid"></div>
-</div>
+    <div class="collection-header">
+      <h2>The Collection</h2>
+      <button class="download-all-collection" id="downloadAllCollectionBtn" onclick="downloadAllMedia()">Download All Memories</button>
+    </div>
+    <div id="gallery" class="gallery-grid"></div>
+  </div>
 
-<div id="lightbox">
-  <div id="download" onclick="download()">Download</div>
-  <img id="lightImg">
-  <div class="arrow leftA" onclick="prev()">❮</div>
-  <div class="arrow rightA" onclick="next()">❯</div>
-</div>
+  <div id="lightbox">
+    <button id="downloadBtn" onclick="downloadCurrentMedia()">Download Original</button>
+    <div id="lightbox-content"></div>
+    <div class="arrow arrow-left" onclick="prevImage()">❮</div>
+    <div class="arrow arrow-right" onclick="nextImage()">❯</div>
+    <div class="lb-nav" id="lb-counter"></div>
+    <div class="mobile-nav-dots" id="navDots"></div>
+    <div style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:30px; color:white; z-index:3200;" onclick="closeLightbox()">✕</div>
+  </div>
 
-<script>
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyt-UGrZwkoTJwlbUOYGnDAEUbycu16TYH_usG_a1npV_9xRF6AZJTPGf5kVLwj2jIfNg/exec";
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyt-UGrZwkoTJwlbUOYGnDAEUbycu16TYH_usG_a1npV_9xRF6AZJTPGf5kVLwj2jIfNg/exec';
+    let allImages = [];
+    let currentIndex = 0;
+    let dataLoaded = false;
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let preloadedThumbnails = 0;
 
-let images=[], index=0;
-let startX=0;
+    // Helper functions for Google Drive URLs
+    function getThumbnailUrl(fileId, width = 400) {
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
+    }
 
-/* INVITE */
-function openInvite(){
-  const c=document.getElementById('card');
-  const stage=document.getElementById('stage');
+    function getVideoThumbnailUrl(fileId, width = 400) {
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
+    }
 
-  c.classList.add('flip');
-  setTimeout(()=>{
-    c.classList.add('open');
-    setTimeout(()=>{
-      c.classList.add('zoom');
-      setTimeout(()=>{
-        stage.style.opacity=0;
-        setTimeout(()=>{
-          stage.style.display='none';
-          showApp();
-        },800);
-      },800);
-    },1200);
-  },600);
-}
+    function getViewUrl(fileId) {
+      return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
 
-function showApp(){
-  const app=document.getElementById('app');
-  app.style.display='block';
-  setTimeout(()=>app.style.opacity=1,100);
-  document.body.style.overflow="auto";
-  loadGallery();
-}
+    function getDownloadUrl(fileId) {
+      return `https://drive.google.com/uc?export=download&id=${fileId}`;
+    }
 
-/* LOAD */
-async function loadGallery(){
-  const res=await fetch(SCRIPT_URL);
-  const data=await res.json();
-  images=(data.images||[]).reverse();
-  render();
-}
+    // Update loading percentage
+    function updateLoadingPercentage(percent) {
+      const percentageElement = document.getElementById('percentageNumber');
+      if (percentageElement) {
+        percentageElement.textContent = `${Math.min(Math.round(percent), 100)}%`;
+      }
+    }
 
-/* RENDER */
-function render(){
-  const g=document.getElementById('gallery');
-  g.innerHTML='';
+    // Upload progress functions
+    function showUploadProgress() {
+      const uploadProgress = document.getElementById('uploadProgress');
+      uploadProgress.style.display = 'flex';
+      updateUploadPercentage(0);
+      document.getElementById('uploadStatus').textContent = 'Starting upload...';
+    }
 
-  images.forEach((img,i)=>{
-    const div=document.createElement('div');
-    div.className='item';
+    function hideUploadProgress() {
+      const uploadProgress = document.getElementById('uploadProgress');
+      uploadProgress.style.display = 'none';
+    }
 
-    const el=document.createElement('img');
-    el.src=`https://drive.google.com/thumbnail?id=${img.id}&sz=w400`;
+    function updateUploadPercentage(percent) {
+      const uploadPercentage = document.getElementById('uploadPercentage');
+      if (uploadPercentage) {
+        uploadPercentage.textContent = `${Math.round(percent)}%`;
+      }
+    }
 
-    const hi=new Image();
-    hi.src=`https://drive.google.com/thumbnail?id=${img.id}&sz=w1200`;
-    hi.onload=()=>el.src=hi.src;
+    function updateUploadStatus(status) {
+      const uploadStatus = document.getElementById('uploadStatus');
+      if (uploadStatus) {
+        uploadStatus.textContent = status;
+      }
+    }
 
-    el.onload=()=>el.classList.add('loaded');
+    // Track thumbnail preloading
+    function trackThumbnailLoad() {
+      preloadedThumbnails++;
+      const totalToPreload = Math.min(6, allImages.length);
+      const percent = (preloadedThumbnails / totalToPreload) * 100;
+      updateLoadingPercentage(percent);
+      
+      if (preloadedThumbnails >= totalToPreload && dataLoaded) {
+        setTimeout(() => {
+          const loadingMemories = document.getElementById('loadingMemories');
+          if (loadingMemories) {
+            loadingMemories.style.opacity = '0';
+          }
+        }, 500);
+      }
+    }
 
-    div.appendChild(el);
-    div.onclick=()=>openLightbox(i);
+    // Preload gallery data
+    (function preloadGalleryData() {
+      updateLoadingPercentage(10);
+      
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          updateLoadingPercentage(50);
+          
+          if (data.success) {
+            allImages = data.images || [];
+            dataLoaded = true;
+            updateLoadingPercentage(70);
+            
+            preloadedThumbnails = 0;
+            preloadFirstFewThumbnails();
+            
+            if (allImages.length === 0) {
+              updateLoadingPercentage(100);
+            }
+          } else {
+            updateLoadingPercentage(100);
+          }
+        })
+        .catch(err => {
+          console.log('Background preload attempt:', err.message);
+          updateLoadingPercentage(100);
+        });
+    })();
 
-    g.appendChild(div);
-    setTimeout(()=>div.classList.add('visible'),i*40);
-  });
-}
+    function preloadFirstFewThumbnails() {
+      const maxPreload = Math.min(6, allImages.length);
+      if (maxPreload === 0) {
+        updateLoadingPercentage(100);
+        return;
+      }
+      
+      for (let i = 0; i < maxPreload; i++) {
+        const img = new Image();
+        img.onload = trackThumbnailLoad;
+        img.onerror = trackThumbnailLoad;
+        
+        const item = allImages[i];
+        const isVideo = item.mimeType?.includes('video') || 
+                       item.name?.toLowerCase().match(/\.(mp4|mov|webm|avi|wmv|flv|mkv)$/);
+        
+        if (isVideo) {
+          // Still try to load a thumbnail for videos
+          img.src = getVideoThumbnailUrl(item.id, 400);
+        } else {
+          img.src = getThumbnailUrl(item.id, 400);
+        }
+      }
+    }
 
-/* LIGHTBOX */
-function openLightbox(i){
-  index=i;
-  const lb=document.getElementById('lightbox');
-  lb.style.display='flex';
-  update();
+    function preloadAdjacentLightboxImages() {
+      if (currentIndex < allImages.length - 1) {
+        const nextItem = allImages[currentIndex + 1];
+        if (!nextItem.mimeType?.includes('video')) {
+          const nextImg = new Image();
+          nextImg.src = getThumbnailUrl(nextItem.id, 1200);
+        }
+      }
+      
+      if (currentIndex > 0) {
+        const prevItem = allImages[currentIndex - 1];
+        if (!prevItem.mimeType?.includes('video')) {
+          const prevImg = new Image();
+          prevImg.src = getThumbnailUrl(prevItem.id, 1200);
+        }
+      }
+    }
 
-  lb.addEventListener('touchstart',e=>startX=e.touches[0].clientX);
-  lb.addEventListener('touchend',e=>{
-    let endX=e.changedTouches[0].clientX;
-    if(startX-endX>50) next();
-    if(endX-startX>50) prev();
-  });
-}
+    function updateMobileDots() {
+      const dotsContainer = document.getElementById('navDots');
+      if (window.innerWidth <= 600 && allImages.length > 1) {
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < allImages.length; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'dot' + (i === currentIndex ? ' active' : '');
+          dot.onclick = () => {
+            currentIndex = i;
+            updateLightboxMedia();
+            preloadAdjacentLightboxImages();
+          };
+          dotsContainer.appendChild(dot);
+        }
+      }
+    }
 
-function update(){
-  document.getElementById('lightImg').src=
-    `https://drive.google.com/thumbnail?id=${images[index].id}&sz=w1200`;
-}
+    window.onload = () => {
+      updateLoadingPercentage(0);
+      
+      setTimeout(() => {
+        document.getElementById('card').style.cursor = 'pointer';
+        if (!dataLoaded) {
+          updateLoadingPercentage(25);
+        }
+      }, 300);
+    };
 
-function next(){ if(index<images.length-1){index++; update();}}
-function prev(){ if(index>0){index--; update();}}
+    function runOpeningSequence() {
+      const loadingMemories = document.getElementById('loadingMemories');
+      if (loadingMemories) {
+        loadingMemories.style.opacity = '0';
+      }
+      
+      const card = document.getElementById('card');
+      const stage = document.getElementById('invitation-stage');
+      const site = document.getElementById('main-site');
 
-/* DOWNLOAD */
-function download(){
-  const a=document.createElement('a');
-  a.href=`https://drive.google.com/uc?export=download&id=${images[index].id}`;
-  a.click();
-}
+      card.classList.add('state-flip');
+      setTimeout(() => {
+        card.classList.add('state-open');
+        setTimeout(() => {
+          card.classList.remove('state-flip');
+          card.classList.add('state-zoom');
+          setTimeout(() => {
+            stage.style.opacity = '0';
+            setTimeout(() => { 
+              stage.style.display = 'none'; 
+              site.classList.add('is-visible');
+              document.body.style.overflow = "auto";
+              
+              if (dataLoaded && allImages.length > 0) {
+                renderGallery();
+              } else {
+                document.getElementById("gallery").innerHTML = 'Loading memories...';
+                loadGallery();
+              }
+            }, 800);
+          }, 800);
+        }, 1200);
+      }, 800);
+    }
 
-function downloadAll(){
-  if(!images.length) return;
-  alert("Downloading all memories ✨");
+    function loadGallery() {
+      if (!dataLoaded) {
+        fetch(SCRIPT_URL)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              allImages = data.images || [];
+              dataLoaded = true;
+              renderGallery();
+            } else {
+              document.getElementById("gallery").innerHTML = 'No images found yet.';
+            }
+          })
+          .catch(err => {
+            document.getElementById("gallery").innerHTML = 'Error loading gallery. Please refresh.';
+          });
+      } else {
+        renderGallery();
+      }
+    }
 
-  images.forEach((img,i)=>{
-    setTimeout(()=>{
-      const a=document.createElement('a');
-      a.href=`https://drive.google.com/uc?export=download&id=${img.id}`;
-      a.click();
-    }, i*400);
-  });
-}
+    function renderGallery() {
+      const gallery = document.getElementById("gallery");
+      if (allImages.length === 0) {
+        gallery.innerHTML = 'No images in the collection yet. Be the first to upload!';
+        return;
+      }
+      
+      gallery.innerHTML = '';
+      allImages.forEach((img, index) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'gallery-item';
+        
+        const isVideo = img.mimeType?.includes('video') || 
+                       img.name?.toLowerCase().match(/\.(mp4|mov|webm|avi|wmv|flv|mkv)$/);
+        
+        if (isVideo) {
+          // Create video thumbnail with play button overlay
+          const videoContainer = document.createElement('div');
+          videoContainer.style.position = 'relative';
+          videoContainer.style.width = '100%';
+          videoContainer.style.height = '350px';
+          videoContainer.style.backgroundColor = '#f5f5f5';
+          videoContainer.style.overflow = 'hidden';
+          
+          // Try to load video thumbnail
+          const thumbnailImg = document.createElement('img');
+          thumbnailImg.src = getVideoThumbnailUrl(img.id, 400);
+          thumbnailImg.style.width = '100%';
+          thumbnailImg.style.height = '100%';
+          thumbnailImg.style.objectFit = 'cover';
+          thumbnailImg.style.display = 'block';
+          
+          // Fallback if thumbnail fails
+          thumbnailImg.onerror = function() {
+            this.style.display = 'none';
+            videoContainer.style.backgroundColor = '#2c2c2c';
+            videoContainer.style.display = 'flex';
+            videoContainer.style.alignItems = 'center';
+            videoContainer.style.justifyContent = 'center';
+            
+            const playIcon = document.createElement('div');
+            playIcon.innerHTML = '▶';
+            playIcon.style.fontSize = '60px';
+            playIcon.style.color = 'var(--sage)';
+            playIcon.style.opacity = '0.7';
+            videoContainer.appendChild(playIcon);
+          };
+          
+          videoContainer.appendChild(thumbnailImg);
+          
+          // Add play button overlay
+          const playIcon = document.createElement('div');
+          playIcon.innerHTML = '▶';
+          playIcon.style.position = 'absolute';
+          playIcon.style.top = '50%';
+          playIcon.style.left = '50%';
+          playIcon.style.transform = 'translate(-50%, -50%)';
+          playIcon.style.fontSize = '60px';
+          playIcon.style.color = 'white';
+          playIcon.style.opacity = '0.9';
+          playIcon.style.textShadow = '0 2px 10px rgba(0,0,0,0.5)';
+          playIcon.style.zIndex = '5';
+          playIcon.style.pointerEvents = 'none';
+          videoContainer.appendChild(playIcon);
+          
+          // Video indicator
+          const videoIndicator = document.createElement('div');
+          videoIndicator.className = 'video-indicator';
+          videoIndicator.textContent = 'VIDEO';
+          videoIndicator.style.pointerEvents = 'none';
+          videoContainer.appendChild(videoIndicator);
+          
+          wrap.appendChild(videoContainer);
+        } else {
+          const el = document.createElement('img');
+          el.src = getThumbnailUrl(img.id, 400);
+          el.loading = "lazy";
+          el.alt = img.name || 'Gallery image';
+          el.style.backgroundColor = '#f5f5f5';
+          
+          el.onerror = function() {
+            this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23f5f5f5"/><text x="200" y="150" text-anchor="middle" fill="%238da089" font-family="Prata" font-size="20">Memory</text></svg>';
+          };
+          
+          wrap.appendChild(el);
+        }
+        
+        wrap.onclick = () => openLightbox(index);
+        gallery.appendChild(wrap);
+      });
+    }
 
-/* CLOSE */
-document.getElementById('lightbox').onclick=e=>{
-  if(e.target.id==="lightbox") e.currentTarget.style.display='none';
-};
+    function openLightbox(index) {
+      currentIndex = index;
+      const lightbox = document.getElementById('lightbox');
+      lightbox.style.display = 'flex';
+      
+      updateLightboxMedia();
+      preloadAdjacentLightboxImages();
+      updateMobileDots();
+      
+      lightbox.addEventListener('touchstart', handleTouchStart, { passive: true });
+      lightbox.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
 
-/* KEYBOARD */
-document.addEventListener('keydown',e=>{
-  if(document.getElementById('lightbox').style.display==="flex"){
-    if(e.key==="ArrowRight") next();
-    if(e.key==="ArrowLeft") prev();
-    if(e.key==="Escape") document.getElementById('lightbox').style.display='none';
-  }
-});
+    function handleTouchStart(event) {
+      touchStartX = event.changedTouches[0].screenX;
+    }
 
-/* UPLOAD */
-document.getElementById('uploadBtn').onclick=async()=>{
-  const files=document.getElementById('file').files;
-  if(!files.length) return;
+    function handleTouchEnd(event) {
+      touchEndX = event.changedTouches[0].screenX;
+      handleSwipe();
+    }
 
-  document.getElementById('status').innerText="Saving your memories ❤️";
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          nextImage();
+        } else {
+          prevImage();
+        }
+      }
+    }
 
-  for(let file of files){
-    const reader=new FileReader();
-    const base64=await new Promise(r=>{
-      reader.onload=()=>r(reader.result.split(',')[1]);
-      reader.readAsDataURL(file);
+    function updateLightboxMedia() {
+      const item = allImages[currentIndex];
+      const container = document.getElementById('lightbox-content');
+      const lbCounter = document.getElementById('lb-counter');
+      
+      container.innerHTML = '';
+      
+      const isVideo = item.mimeType?.includes('video') || 
+                     item.name?.toLowerCase().match(/\.(mp4|mov|webm|avi|wmv|flv|mkv)$/);
+
+      if (isVideo) {
+        // Use iframe for videos
+        const iframe = document.createElement('iframe');
+        iframe.src = getViewUrl(item.id);
+        iframe.style.width = '90vw';
+        iframe.style.height = '90vh';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '12px';
+        iframe.allow = 'autoplay';
+        container.appendChild(iframe);
+      } else {
+        const img = document.createElement('img');
+        img.src = getThumbnailUrl(item.id, 1200);
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.objectFit = 'contain';
+        
+        img.onerror = function() {
+          this.src = getThumbnailUrl(item.id, 800);
+        };
+        
+        container.appendChild(img);
+      }
+      
+      lbCounter.textContent = (currentIndex + 1) + " / " + allImages.length;
+      updateMobileDots();
+    }
+
+    function downloadCurrentMedia() {
+      const item = allImages[currentIndex];
+      const link = document.createElement('a');
+      link.href = getDownloadUrl(item.id);
+      link.download = item.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function downloadAllMedia() {
+      if (allImages.length === 0) {
+        alert('No images to download!');
+        return;
+      }
+      
+      alert(`Starting download of ${allImages.length} files. They will download one by one.`);
+      
+      for (let i = 0; i < allImages.length; i++) {
+        const item = allImages[i];
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = getDownloadUrl(item.id);
+          link.download = item.name || `file-${i}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }, i * 500);
+      }
+    }
+
+    function closeLightbox() { 
+      document.getElementById('lightbox').style.display = 'none'; 
+      const lightbox = document.getElementById('lightbox');
+      lightbox.removeEventListener('touchstart', handleTouchStart);
+      lightbox.removeEventListener('touchend', handleTouchEnd);
+    }
+
+    function nextImage() { 
+      if (currentIndex < allImages.length - 1) { 
+        currentIndex++; 
+        updateLightboxMedia();
+        preloadAdjacentLightboxImages();
+      } 
+    }
+
+    function prevImage() { 
+      if (currentIndex > 0) { 
+        currentIndex--; 
+        updateLightboxMedia();
+        preloadAdjacentLightboxImages();
+      } 
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('lightbox').style.display === 'flex') {
+        if (e.key === "ArrowRight") nextImage();
+        if (e.key === "ArrowLeft") prevImage();
+        if (e.key === "Escape") closeLightbox();
+      }
     });
 
-    await fetch(SCRIPT_URL,{
-      method:"POST",
-      body:JSON.stringify({
-        file:base64,
-        fileName:file.name,
-        mimeType:file.type
-      })
+    // Close lightbox when clicking background
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeLightbox();
+      }
     });
-  }
 
-  document.getElementById('status').innerText="Uploaded ✨";
-  loadGallery();
-};
-</script>
+    // File input change handler
+    document.getElementById('fileInput').onchange = function() {
+      document.getElementById('file-count').innerHTML = this.files.length + " files selected";
+    };
 
+    // Upload button handler
+    document.getElementById("uploadBtn").onclick = async function() {
+      const fileInput = document.getElementById("fileInput");
+      const status = document.getElementById("status");
+      const files = fileInput.files;
+      
+      if (!files.length) {
+        status.textContent = "Please select files first!";
+        status.style.color = "red";
+        setTimeout(() => {
+          status.textContent = "";
+          status.style.color = "";
+        }, 3000);
+        return;
+      }
+      
+      this.disabled = true;
+      fileInput.disabled = true;
+      
+      showUploadProgress();
+      updateUploadPercentage(0);
+      updateUploadStatus(`Uploading 0 of ${files.length} files...`);
+      
+      let completed = 0;
+      let errors = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        try {
+          const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result.split(",")[1];
+              resolve(result);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          
+          updateUploadPercentage((i / files.length) * 100);
+          updateUploadStatus(`Uploading ${i + 1} of ${files.length}: ${file.name}`);
+          
+          const response = await fetch(SCRIPT_URL, {
+            method: "POST", 
+            mode: 'cors',
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ 
+              file: base64, 
+              fileName: file.name, 
+              mimeType: file.type 
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (!result.success) {
+            errors.push(file.name);
+          }
+          
+          completed++;
+          
+        } catch (error) {
+          console.error('Upload error:', error);
+          errors.push(file.name);
+        }
+      }
+      
+      updateUploadPercentage(100);
+      
+      if (errors.length === 0) {
+        updateUploadStatus('Upload complete! Refreshing gallery...');
+        
+        setTimeout(() => {
+          hideUploadProgress();
+          
+          this.disabled = false;
+          fileInput.disabled = false;
+          fileInput.value = "";
+          document.getElementById('file-count').innerHTML = "";
+          status.textContent = "Uploaded! ❤️";
+          status.style.color = "var(--sage)";
+          
+          dataLoaded = false;
+          loadGallery();
+          
+          setTimeout(() => {
+            status.textContent = "";
+          }, 3000);
+        }, 1500);
+      } else {
+        updateUploadStatus(`${errors.length} files failed to upload. Refreshing gallery...`);
+        
+        setTimeout(() => {
+          hideUploadProgress();
+          
+          this.disabled = false;
+          fileInput.disabled = false;
+          status.textContent = "Some uploads failed. Gallery refreshed.";
+          status.style.color = "orange";
+          
+          dataLoaded = false;
+          loadGallery();
+          
+          setTimeout(() => {
+            status.textContent = "";
+          }, 3000);
+        }, 1500);
+      }
+    };
+  </script>
 </body>
 </html>
